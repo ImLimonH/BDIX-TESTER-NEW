@@ -6,7 +6,6 @@ import webbrowser
 import random
 import time
 
-
 init(convert=True)
 
 def read_links_from_file(file_path):
@@ -23,7 +22,7 @@ def check_link(link):
         latency = int((time.time() - start_time) * 1000)  # Calculating latency in milliseconds
         if response.status_code == 200:
             return f"{Fore.GREEN}Working{Style.RESET_ALL} - {latency}ms"
-        elif response.status_code == 301 or response.status_code == 302:
+        elif response.status_code in [301, 302]:
             return f"{Fore.ORANGE}May contain threat{Style.RESET_ALL}"
         else:
             return f"{Fore.RED}Not working{Style.RESET_ALL}"
@@ -31,7 +30,6 @@ def check_link(link):
         return f"{Fore.RED}Not working{Style.RESET_ALL}"
 
 def strip_color_codes(text):
-    # Regex pattern to match ANSI escape sequences (color codes)
     ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
     return ansi_escape.sub('', text)
 
@@ -39,7 +37,6 @@ def save_working_links(links, output_file):
     with open(output_file, 'w') as file:
         for i, link in enumerate(links, start=1):
             status = check_link(link)
-            # Strip color codes for file output
             stripped_status = strip_color_codes(status)
             file.write(f"{link}\n")
 
@@ -54,7 +51,7 @@ def process_links(links):
         if "Working" in status:
             status_split = status.split(" - ")
             print(f"{number_color}{i}. {Style.RESET_ALL}{link_color}{link}{Style.RESET_ALL} - {status_color}{status_split[0]}{Style.RESET_ALL} - {latency_color}{status_split[1]}{Style.RESET_ALL}")
-            working_links.append(link)  # Append only if it's a working link
+            working_links.append(link)
         else:
             print(f"{number_color}{i}. {Style.RESET_ALL}{link_color}{link}{Style.RESET_ALL} - {status_color}{status}{Style.RESET_ALL}")
     return working_links
@@ -67,7 +64,6 @@ def open_links_in_browser(links, selected_indices):
             index_ranges.extend(range(start, end + 1))
         else:
             index_ranges.append(int(index_range))
-
     for index in sorted(set(index_ranges)):
         if index <= len(links):
             webbrowser.open(links[index - 1])
@@ -76,49 +72,45 @@ def open_links_in_browser(links, selected_indices):
 
 try:
     links = read_links_from_file('url.txt')
-
     colors = [Fore.RED, Fore.GREEN, Fore.BLUE]
-    greeting = r"""
- ____   ____   ___ __  __        _____             _               
-| __ ) |  _ \ |_ _|\ \/ /       |_   _|  ___  ___ | |_   ___  _ __ 
-|  _ \ | | | | | |  \  /  _____   | |   / _ \/ __|| __| / _ \| '__|
-| |_) || |_| | | |  /  \ |_____|  | |  |  __/\__ \| |_ |  __/| |   
-|____/ |____/ |___|/_/\_\         |_|   \___||___/ \__| \___||_|   
-                                                                   
-"""
+    greeting = r""" ____   ____   ___ __  __        _____             _             
+                | __ ) |  _ \ |_ _|\ \/ /       |_   _|  ___  ___ | |_   ___  _ __ 
+                |  _ \ | | | | | |  \  /  _____   | |   / _ \/ __|| __| / _ \| '__|
+                | |_) || |_| | | |  /  \ |_____|  | |  |  __/\__ \| |_ |  __/| |   
+                |____/ |____/ |___|/_/\_\         |_|   \___||___/ \__| \___||_|   
+                                                                                    
+    """
     colored_greeting = ''.join(random.choice(colors) + char for char in greeting)
     print(colored_greeting, end='')
-
+    
     additional_links = input("\nIf you want to scan more links, paste them here. Otherwise, leave it blank: ")
     if additional_links:
-        additional_links = additional_links.split()  # Split the additional links string into separate links
+        additional_links = additional_links.split()
         links.extend(additional_links)
-
+    
     working_links = process_links(links)
-
     save_working_links(working_links, 'works.txt')
-
+    
     print("\n\nWhat do you want to do?\n\n1. Open all links in browser (Only Working)\n\n2. Only open the links I want\n")
-
     while True:
         user_choice = input("Enter your choice (1 or 2): ").strip()
         if user_choice in ['1', '2']:
             break
         else:
             print("Invalid choice. Please enter either 1 or 2.")
-
+    
     if user_choice == '1':
         for link in working_links:
             webbrowser.open(link)
     elif user_choice == '2':
         selected_indices = input("Select/choose links by giving corresponding number(s): ").strip()
         open_links_in_browser(working_links, selected_indices)
-
+    
     colors = [Fore.RED, Fore.GREEN, Fore.BLUE]
     author = "This code was developed by Farhad Ahmed\nFor more information visit me at http://github.com/f4rh4d-4hmed"
-
     colored_text = ''.join(random.choice(colors) + char for char in author)
     print(colored_text)
 
 except KeyboardInterrupt:
-    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExiting:)")
+    print("\nExiting...")
+
